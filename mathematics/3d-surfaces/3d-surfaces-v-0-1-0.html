@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang=en>
+<head>
+<title>3D Surfaces v0.1.0</title>
+<meta charset=utf-8 />
+<meta name=viewport content='width=device-width,user-scalable=no,minimum-scale=1.0,maximum-scale=1.0' />
+</head>
+<body>
+<script src=http://rawgit.com/mrdoob/three.js/r71/build/three.min.js ></script>  
+<script src=http://rawgit.com/mrdoob/three.js/r71/examples/js/controls/OrbitControls.js ></script>
+<script src=http://rawgit.com/mrdoob/three.js/r71/examples/js/libs/stats.min.js ></script>  
+<script>
+
+	var equations = [
+
+// Gathered from a variety of sources over a lengthy period of time
+
+		[ 'equation Betty' , '0.5 * sin( 0.07 * x ) * sin( 0.07 * y )' ],
+		[ 'equation Candace' , ' 0.08 * sin( 0.25 * x ) * sin( 0.25 * y )' ],
+		[ 'equation Dara' , ' 0.05 * sin( 0.3 * Math.sqrt( x * x + y * y ) )' ],
+		[ 'equation Eloise' , ' 0.25 * sin(0.1 * x ) + 0.25 * cos( 0.1 * y )' ],
+		[ 'equation Fatima' , ' var t = 0.2 * sqrt( pow( x, 2 )  + pow( y, 2 ) );  1 * sin( t ) / ( t ) ' ],
+		[ 'equation Georgina' , ' 0.0001 * ( pow( x, 2 ) + pow( y, 2 ) )' ],
+
+// http://www.math.uri.edu/~bkaskosz/flashmo/graph3d/
+		[ 'equation Heidi' , ' 0.00005 * cos( 0.01 * x * y ) * ( x * x - y * y )' ],
+		[ 'equation Irene' , ' 0.05 * sin( 0.01 * ( x * y ) )' ],
+		[ 'equation Freda' , ' 0.0000025 * ( pow( x, 3 )- 3 * x + y * y * y - 3 * y ) ' ],
+
+// source ??
+		[ 'equation Jody' , ' 0.0005 * cos( abs( x - 50 ) + abs( y - 50 ) + 25 ) * ( abs( x ) + abs( y ) )' ],
+
+// http://www.benjoffe.com/code/tools/functions3d/examples
+
+		[ 'Torus', ' 0.05 * pow( pow( 4, 2 ) - pow( 6 - pow( ( 0.1 * x * x + 0.1 * y * y ), 0.5 ), 2 ), 0.5 )' ], // (0.4^2-(0.6-(x^2+y^2)^0.5)^2)^0.5
+		[ 'Ripple', ' 0.03 * sin( 0.1 * ( 0.5 * x * x + 0.5 * y * y ) ) ' ], // sin(10(x^2+y^2))/10
+		[ 'Tube', ' 0.0005 * ( pow( x, 2 ) + pow( y, 2 ) ) - 1' ], // 1/(15(x^2+y^2))
+		[ 'Bumps', ' sin( 0.1 * x ) * cos( 0.1 * y ) / 10 ' ], // in(5x)*cos(5y)/5
+		[ 'Cone', ' 0.01 * pow(  x * x + y * y, 0.5 ) ' ], // (x^2+y^2)^0.5
+
+
+//		[ 'Stairs', '( sign( -0.65 - x ) + sign( -0.35 - x ) + sign(-.05 - x ) + sign( 0.25 - x ) + sign( 0.55 - x ) ) / 7 ' ], // (sign(-.65-x)+sign(-.35-x)+sign(-.05-x)+sign(.25-x)+sign(.55-x))/7
+		[ 'Stairs', ' 0.15 * ( sign( -65 - x ) + sign( -35 - x ) + sign( 5 - x ) + sign( 25 - x ) + sign( 55 - x ) ) ' ], // (sign(-.65-x)+sign(-.35-x)+sign(-.05-x)+sign(.25-x)+sign(.55-x))/7
+
+		[ 'Pyramid', ' 0.3 - 0.005 * ( abs( x + y ) + abs( y - x ) ) ' ],  // 1-abs(x+y)-abs(y-x)
+		[ 'Paper Plane', ' 1 * sign( x ) * atan( x * 80 ) / 6 * sign( -y - x + 1 ) * sign( - y + x + 1 ) ' ],  // sign(x) * atan(x*80)/6 * sign(-y-x+1) * sign(-y+x+1)*5 - 1.01
+		[ 'Green Cross', ' -0.1 * sign( sign( pow( 0.5 * x, 2 ) - 9 ) - 1 + sign( pow( 0.5 * y, 2 ) - 9 ) - 1 ) ' ],  // .1 - sign(sign((x*12)^2-9)-1 + sign((y*12)^2-9)-1)/2
+		[ 'Mosque Dome', ' -0.01 *  log( pow( 0.001 * x, 2 ) + pow( 0.001 * y, 2 ) )' ],  // .7/log(x^2+y^2)+.6
+
+		[ 'Roof', ' 0.01 * ( 50 - abs( y ) ) ' ], // 1-abs(y)
+		[ 'Windmill', ' sign( x * y ) * sign( 1 - pow( x * 2, 2 ) + pow( y * 2, 2 ) ) / 9 ' ], //sign(x*y) * sign(1-(x*9)^2+(y*9)^2)/9
+//		[ 'Floppy Disc', '' ],  // (1-acsc((x*4)^2+(y*4)^2))/1000
+		[ 'Triangle', ' 0.1 * ( 1 - sign( -0.02 * x - 0.51 + abs( 0.03 * y ) ) ) * ( sign( 0.5 - 0.02 * x ) + 1 )' ],  // (1-sign(-x-.51+abs(y*2)))/3 * (sign(.5-x)+1)/3
+
+		[ 'Top Hat', ' ( sign( 500 - ( x * x / 2 + y * y / 2 ) ) + sign( 500 - ( x * x / 4 + y * y / 4 ) ) ) / 4 - 0 ' ], // sign(0.2-(x^2+y^2)) + sign(0.2-(x^2/3+y^2/3)))/3-1
+//		[ 'Letter A', '' ],  // ((1-sign(-x-.9+abs(y*2)))/3*(sign(.9-x)+1)/3)*(sign(x+.65)+1)/2 - ((1-sign(-x-.39+abs(y*2)))/3*(sign(.9-x)+1)/3) + ((1-sign(-x-.39+abs(y*2)))/3*(sign(.6-x)+1)/3)*(sign(x-.35)+1)/2
+//		[ 'Letter O', ' 0.1 * ( sign( 0.2 -( pow( x, 2 ) + pow( y, 2) ) ) + sign( 0.2-( pow( x, 2 ) / 3 + pow(y, 2 ) / 3 ) ) )' ],  // (-sign(0.2-(x^2+y^2)) + sign(0.2-(x^2/3+y^2/3)))/9
+		[ 'Letter V', ' 0.1 * sign( x - 10 + abs( y * 2 )) + 0.1 * sign( x - 50 + abs( y * 2) )' ],  // sign(x-1+abs(y*2))/3 + sign(x-.5+abs(y*2))/3
+		[ 'Intersecting Faces', '-0.000000000001 * exp( pow( 0.2 * x, 2 ) * pow ( 0.2 * y, 2) ) ' ],  // .75/exp((x*5)^2*(y*5)^2)
+
+
+// http://thiagocosta.net/graphing-in-ice/
+
+		[ 'x * y', ' 0.0005 * x * y ' ],
+		[ 'x^2 + y^2', ' 0.00005 * ( pow( x, 2 ) + pow( y, 2 ) )' ],
+		[ 'x^2 – y^2', ' 0.0001 * ( pow( x, 2 ) - pow( y, 2 ) ) ' ],
+		[ 'x^2 * y^2', ' 0.0000001 * ( pow( x, 2 ) * pow( y, 2 ) )' ],
+		[ 'x^3 + y^3', ' 0.00001 * ( pow( x, 3 ) + pow( y, 3 ) )' ],
+
+		[ 'sin(x)', ' 0.1 * sin( 0.25 * x ) ' ],
+		[ 'cos(x) + cos(z) ^ 2', ' 0.1 * ( 0.1 * cos( x ) + pow( cos( 0.05 * y ), 2 ) )' ],
+		[ 'cos(x^2 + z^2)', '0.01 * ( cos( pow( 0.2 * x, 2 ) + pow( 0.2 * y, 2 ) ) )' ],
+		[ 'sin(x^2 + z^2)', '0.01 * ( sin( pow( 0.2 * x, 2 ) + pow( 0.2 * y, 2 ) ) )' ],
+		[ '-1 / (x^2 + z^2)', '-100 / ( pow( x, 2 ) + pow( y, 2 ) ) ' ],
+
+		[ '|cos(x) + cos(y)| ^ (1/2)', ' 0.1 * pow( abs( cos( 0.1 * x ) + cos( 0.1 * y ) ), 0.5 )' ],
+		[ 'cos(x) + cos(y)', '0.1 * ( cos( 0.1 * x ) + cos( 0.1 * y ) )' ],
+		[ '| cos(x^2+y^2) | ^ (1/2)', ' 0.1 * pow( abs( cos( pow( 0.1 * x, 2 ) + pow( 0.1 * y, 2 )) ), 0.5 )' ],
+		[ '|cos(x+y)| ^ (10/2)', ' 0.1 * pow( abs( cos( 0.25 * x + 0.25 * y ) ), 5 )' ],
+		[ 'cos( |x| + |y| ) * ( x + y )', '0.005 * cos( abs( x ) +  abs( y ) ) * ( x + y )' ],
+
+		[ 'cos( |x| + |z|) * (|x| + |z| )', ' 0.001 * cos( abs( x ) + abs( y ) ) * ( abs( x ) + abs( y ) )' ],
+		[ 'cos( |x| + |z| )', ' 0.1 * cos( abs ( x ) + abs( y ) )' ],
+		[ '|sin(x) * ( sin(x) + cos(z) )| ^ 0.2', ' 0.2 * pow( abs( sin( 0.2 * x ) * ( sin( 0.2 * x ) + cos( 0.2 * y ) ) ), 0.2 )' ],
+		[ 'sin(x^2) * cos(z^2)', ' 0.05 * sin( 0.02 * pow( x, 2 ) ) * cos( 0.02 * pow( y, 2 ) )' ],
+
+
+//https://www.physicsforums.com/threads/cool-3-d-functions-for-graphing.140087/
+
+		[ 'x * pow( y, 3 ) - y * pow( x, 3 )', ' 0.0000003 * ( x * y * y * y - y * x * x * x ) ' ], // x*pow( y, 3 )-y*pow( x, 3 )
+
+// Being generated as we speak
+
+		[ 'x - y', ' 0.01 * ( x - y ) ' ],
+		[ 'x + y', ' 0.01 * ( x + y ) ' ],
+
+		[ 'abs( x - y )', ' 0.01 * ( abs( x - y ) ) ' ],
+		[ 'abs( x + y )', ' 0.01 * ( abs( x + y ) ) ' ],
+
+		[ 'abs( x ) - abs( y )', ' 0.01 * ( abs( x ) - abs( y ) ) ' ],
+		[ 'abs( x ) + abs( y )', ' 0.01 * ( abs( x ) + abs( y ) ) ' ],
+
+		[ '-x - y + abs( x + y )', ' 0.01 * (  -x - y + abs( x + y ) ) ' ],
+		[ 'x + y + abs( x - y ) ', ' 0.01 * ( x + y + abs( x - y ) ) ' ],
+		[ 'x - y + abs( x + y )', ' 0.01 * (  x - y + abs( x + y ) ) ' ],
+		[ 'x + y + abs( x + y )', ' 0.01 * (  x + y + abs( x + y ) ) ' ],
+
+		[ 'pow( x, 2 ) + abs( y )', ' 0.01 * ( 0.02 * pow( x, 2 ) + abs( y ) ) ' ],
+		[ 'pow( x, 2 ) - abs( y )', ' 0.01 * ( 0.02 * pow( x, 2 ) - abs( y ) ) ' ],
+
+		[ 'sign( 30 - x *  y ) + sign( 20 + x )', ' 0.1 * ( sign( 30 - x *  y ) + sign( 20 + x ) )' ],
+		[ 'very long', ' 0.1 * ( sign( 10 - x ) + sign( 10 + x ) + sign( 10 + y ) + sign( 10 - y ) )' ],
+
+		[ 'vee', ' 0.1 * ( sign( 2 - x / ( 1 + abs ( y ) ) ) + sign( 20 + x ) )' ],
+
+		[ 'equation Irene2' , ' 0.09 * sin( cos( 0.1 * x * y ) )' ],
+
+		[ 'equation Betty2' , '0.5 * sin( 0.05 * x ) * cos( 0.05 * y )' ],
+		[ 'equation Betty3' , '0.5 * sin( 0.05 * x ) * sin( 0.05 * y )' ],
+
+//		[ '', '' ],  //
+
+	];
+
+	var defaultEquation = equations.length - 1;
+//	var defaultEquation = Math.floor( equations.length * Math.random() );
+
+	var css, header, menu, renderer, scene, camera, controls, stats;
+	var geometry, material, mesh;
+
+	init();
+	animate();
+
+	function init() {
+
+		css = document.head.appendChild( document.createElement('style') );
+		css.innerHTML ='body { font: 12pt monospace; margin: 0; overflow: hidden; }' +
+			'h2 { margin: 0; }' +
+			'h2 a, #bars, #i { text-decoration: none; }' +
+			'#bars { color: pink; }' +
+		'';
+
+		header = document.body.appendChild( document.createElement( 'div' ) );
+		header.style.cssText = 'left: 340px; position: absolute; top: 20px; transition: left 1s; ';
+		header.innerHTML = '<h1><a href=JavaScript:slideMenu(); id=bars >&#9776;</a></h1>';
+
+		menu = header.appendChild( document.createElement( 'div' ) );
+		menu.style.cssText = 'background-color: #eee; left: -350px; max-height: ' + ( window.innerHeight - 25 ) + 'px; max-width: 300px; ' +
+		'opacity: 0.85; overflow: auto; padding: 0 15px; position: absolute; top: 0;';
+		menu.innerHTML = '<h2>' +
+				'<a href="" >' + document.title + '</a> ' +
+				'<a id=i href=http://jaanga.github.io/algesurf/function-graph-lite/ target=_top >&#x24D8;</a>' +
+			'</h2>' +
+			'<p><select id=selEquation></select></p>' +
+			'<p id=msg ></p>' +
+		'';
+
+		stats = new Stats();
+		stats.domElement.style.cssText = 'position: absolute; right: 0; top: 0; z-index: 100; ';
+		document.body.appendChild( stats.domElement );
+
+		renderer = new THREE.WebGLRenderer( { alpha: 1, antialias: true, clearColor: 0xffffff }  );
+		renderer.setSize( window.innerWidth, window.innerHeight );
+		document.body.appendChild( renderer.domElement );
+
+		camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 0.01, 100 );
+		camera.position.set( 1, 1, 1 );
+
+		controls = new THREE.OrbitControls( camera, renderer.domElement );
+		controls.maxDistance = 8;
+
+		scene = new THREE.Scene();
+
+		window.addEventListener( 'resize', onWindowResize, false );
+
+// assets
+
+		defaultEquation = location.hash ? location.hash.substr( 1 ) : defaultEquation;
+
+		for ( var i = 0;  i < equations.length; i++ ) {
+
+			selEquation.innerHTML += '<option>' + equations[ i ][ 0 ] +'</option>';
+
+		}
+
+		selEquation.selectedIndex = defaultEquation;
+
+		selEquation.onchange = function() {
+
+			defaultEquation = selEquation.selectedIndex;
+
+			drawEquation();
+
+		};
+
+		var axisHelper = new THREE.AxisHelper( 10);
+		scene.add( axisHelper );
+
+		drawEquation();
+
+	}
+
+	function drawEquation() {
+
+		var equation = function( x, y ) { return eval( equations[ defaultEquation ][ 1 ] ); }
+
+		geometry = new THREE.PlaneBufferGeometry( 1, 1, 99, 99 );
+		geometry.applyMatrix( new THREE.Matrix4().makeRotationX( -0.5 * Math.PI ) );
+
+		vertices = geometry.attributes.position.array;
+
+		for ( var x = -50, i = 1; x < 50; x++ ) {
+
+			for ( var y = -50; y < 50; y++ ) {
+
+				vertices[ i ] = equation( x, y );
+				i += 3;
+
+			}
+
+		}
+
+		geometry.computeFaceNormals();
+		geometry.computeVertexNormals();
+
+		material = new THREE.MeshNormalMaterial( { side: 2 } );
+
+		scene.remove( mesh );
+		mesh = new THREE.Mesh( geometry, material );
+		scene.add( mesh );
+
+		msg.innerHTML = 'function( x, y ) = { ' + equations[ defaultEquation ][ 1 ] + '; }' ; 
+
+	}
+
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math
+
+	function cos( a ){ return Math.cos( a ); }
+	function sin( a ){ return Math.sin( a ); }
+	function tan( a ){ return Math.tan( a ); }
+	function atan( a ){ return Math.atan( a ); }
+
+	function abs( a ){ return Math.abs( a ); }
+	function exp( a ){ return Math.exp( a ); }
+	function log( a ){ return Math.log( a ); }
+	function pow( a, b ){ return Math.pow( a, b ); }
+	function ran(){ return Math.random(); }
+	function sign( a ){ return Math.sign( a ); }
+	function sqrt( a ){ return Math.sqrt( a ); }
+
+	function cosh( a ){ return Math.cosh( a ); }
+	function sinh( a ){ return Math.sinh( a ); }
+	function tanh( a ){ return Math.tanh( a ); }
+
+	function sech( a ){ return Math.sech( a ); }
+
+	function slideMenu(){
+
+		header.style.left = header.style.left === '20px' ? '340px' : '20px';
+
+	}
+
+	function onWindowResize() {
+
+		camera.aspect = window.innerWidth / window.innerHeight;
+		camera.updateProjectionMatrix();
+
+		renderer.setSize( window.innerWidth, window.innerHeight );
+
+	}
+
+	function animate( timestamp ) {
+
+		requestAnimationFrame( animate );
+		controls.update();
+		renderer.render( scene, camera );
+		stats.update();
+
+	}
+
+</script>
+</body>
+</html>

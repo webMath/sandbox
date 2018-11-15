@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang=en >
+<head>
+<title>Three Columns Right Fixed with Data Sample and Buttons</title>
+<meta charset=utf-8 />
+<meta name=viewport content='width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0' />
+<style>
+
+	* { box-sizing: border-box; vertical-align:top; }
+	body, html { height: 100%; width: 100%; }
+	body { font: 12pt monospace; margin: 0; overflow: hidden; }
+	h1, h1 a, h3 { margin: 0; text-decoration: none; }
+	iframe { border: 1px #ccc solid; height: 100%; width: 100%; }
+	input[type=range] { -webkit-appearance: none; background-color: silver; height:20px; width: 200px; }
+	input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; background-color: #888; height: 28px; opacity: 0.5; width: 10px; }
+	span { color: #ccc; position: absolute; bottom: 0;}
+
+	#info { line-height: 18pt; font-size: 18pt; text-decoration: none; }
+
+</style>
+</head>
+<body>
+
+	<script src=http://cdnjs.cloudflare.com/ajax/libs/showdown/1.2.2/showdown.min.js ></script>
+	<script src=https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.0/ace.min.js ></script>
+
+	<span>Three Columns Right Fixed with Data Sample and Buttons</span>
+	<div id=hamburger >
+		<h1><a href=JavaScript:slideHamburger(); id=bars >&#9776;</a></h1>
+	</div>
+	<div id=col1 ></div>
+	<div id=col2 ></div>
+	<div id=button1 >
+
+		<input type=file id=inpFile onchange=openFile(this); /> 
+		<button onclick=updateView(); >Update View</button> 
+		<button onclick=saveFile(); >Save to File</button> 
+		<a id=info href=https://github.com/exploratoria/exploratoria.github.io/sandbox/ >&#x24D8;</a>
+	</div>
+	<div id=col3 ><iframe id=ifr ></iframe></div>
+	<div id=button2 >
+			<input type=range id=inpSplit min=1 max=83 step=1 value=42.5 onchange=updateSplit() />
+			<button onclick=splitVertical(); >vertical</button> 
+			<button onclick=splitHorizontal(); >horizontal</button> 
+	</div>
+
+
+	</div>
+
+<script>
+
+// for input file styling: http://jsfiddle.net/gwwar/nFLKU/ 
+// http://stackoverflow.com/questions/4909228/style-input-type-file 
+
+	var menuFile = '../../../../three.js/examples/';
+	var openingFile = './readme.md';
+
+	init();
+
+	function init() {
+
+		editor = ace.edit( "col2" );
+		editor.$blockScrolling = Infinity
+
+		converter = new showdown.Converter();
+
+		positionsStart();
+
+		addThreejsExamplesToCol1();
+
+		window.addEventListener( 'hashchange', hashChange, false );
+
+		hashChange();
+
+	}
+
+
+	function positionsStart() {
+
+		var colHeight = window.innerHeight - 50;
+
+		hamburger.style.cssText = ' padding: 15px 0 0 2px; left: 20%; position: absolute;  transition: left 1s; z-index: 10; ';
+
+		col1.style.cssText = ' background-color: #eee; border: 1px #ccc solid; height: ' + colHeight + 'px; left: 2%; padding: 0 10px; ' +
+			'overflow: auto; position: absolute; ' +
+			'top: 20px; transition: left 1s; width: 18%; ';
+		col2.style.cssText = ' background-color: #fff; border: 1px #ccc solid; height: ' + ( colHeight - 35 ) + 'px; left: 23%; position: absolute; ' +
+			'top: 20px; transition: left 1s, width 1s; width: 27%; ';
+		button1.style.cssText = ' background-color: #fff; border: 0px #ccc solid; bottom: 30px; left: 23%; position: absolute; ' +
+			' transition: left 1s, width 1s; width: 50%; ';
+
+		col3.style.cssText = ' background-color: #fff; border: 0px #ccc solid; height: ' + ( colHeight - 35 ) + 'px; left: 52%; position: absolute; ' +
+			'top: 20px; transition: left 1s, width 1s; width: 46%; ';
+
+		button2.style.cssText = ' background-color: #fff; border: 0px #ccc solid; bottom: 30px; left: 52%; position: absolute; ' +
+			' text-align: right; width: 46%; ';
+
+	}
+
+	function addThreejsExamplesToCol1() {
+
+		var xmlHttp = new XMLHttpRequest();
+		xmlHttp.open( 'GET', menuFile + 'index.html', true );
+		xmlHttp.onreadystatechange = function() {
+
+			if ( xmlHttp.readyState !== 4  ) { return; }
+
+			response = xmlHttp.responseText;
+
+			var lines = response.split(/\r\n|\n/);
+			var text = '';
+			var writing = false;
+
+			for ( var i = 0; i < lines.length; i++ ) {
+
+				if ( lines[ i ] === '		<script>' ) { writing = true; continue; }
+
+				if ( lines[ i ] === '		};' ) { text += lines[ i ]; break; }
+
+				if ( writing === true ) {
+
+					text += lines[ i ];
+
+				}
+
+			}
+
+			eval( text );
+
+			var keys = Object.keys( files );
+
+			text = '';
+
+			for ( var key in files ) {
+
+				text += '<h3>' + key + '</h3>';
+
+				for ( var i = 0; i < files[ key ].length; i++ ) {
+
+					name = files[ key ][ i ];
+					name = name.substr( name.indexOf( '_' ) + 1 );
+					name = name.replace( /_/g, ' ' );
+
+					text += '<a href=#' + menuFile + files[ key ][ i ] + '.html >' + 
+						name + '</a><br>';
+
+				}
+
+			}
+
+			col1.innerHTML += text;
+
+		};
+
+		xmlHttp.send( null );
+
+	}
+
+	function hashChange() {
+
+		fileName = location.hash ? location.hash.split( '#' )[1] : openingFile;
+
+		if ( fileName === '' ) { return; }
+
+		document.title = fileName.substr( 1 + fileName.lastIndexOf( '/' ) );
+
+		fileType = fileName.substr( fileName.lastIndexOf( '.' )).toLowerCase();
+
+		requestFile ( col2, fileName );
+
+	}
+
+	function requestFile ( obj, fileName ) {
+
+		obj.xmlHttp = new XMLHttpRequest();
+		obj.xmlHttp.open( 'GET', fileName, true );
+		obj.xmlHttp.onreadystatechange = function() {
+
+			if ( obj.xmlHttp.readyState !== 4 ) { return; }
+
+			editor.setValue( obj.xmlHttp.responseText, -1 );
+			updateView();
+
+		};
+
+		obj.xmlHttp.send( null );
+
+	}
+
+	function updateView() {
+
+		if ( fileType === '.html' ) {
+
+			response = editor.getValue();
+
+			response = response.replace( '"../build/three.min.js"', 'https://rawgit.com/mrdoob/three.js/r71/build/three.min.js' );
+			response = response.replace( /"js\//g, '"https://rawgit.com/mrdoob/three.js/r71/examples/js/' );
+			response = response.replace( /\'js\//g, '\'https://rawgit.com/mrdoob/three.js/r71/examples/js/' );
+
+			response = response.replace( /fonts\//g, menuFile + 'fonts/' );
+			response = response.replace( /models\//g, menuFile + 'models/' );
+			response = response.replace( /obj\//g, menuFile + 'obj/' );
+			response = response.replace( /scenes\//g, menuFile + 'scenes/' );
+			response = response.replace( /sounds\//g, menuFile + 'sounds/' );
+
+			response = response.replace( /textures\//g, menuFile + 'textures/' );
+
+			ifr.srcdoc = response;
+
+		} else if ( fileType === '.md' ) {
+
+			ifr.srcdoc = new showdown.Converter().makeHtml( editor.getValue() );
+			ifr.srcdoc += '<style>body { font: 10pt monospace; }</style>';
+		}
+
+	}
+
+	function openFile( that ) {
+
+		var reader = new FileReader();
+		reader.onloadend = function( event ) {
+
+			data = reader.result;
+			editor.setValue( data, -1 );
+			updateView();
+
+		}
+
+		reader.readAsText( that.files[0] );
+
+	}
+
+	function saveFile() {
+
+//		blob = new Blob( [ col2.innerText ] );
+		blob = new Blob( [ editor.getValue( data ) ] );
+		a = document.body.appendChild( document.createElement( 'a' ) );
+		a.href = window.URL.createObjectURL( blob );
+		a.download = 'code-snippet.html';
+		a.click();
+
+	}
+
+	function slideHamburger() {
+
+		if ( hamburger.style.left === '20%' ) {
+
+			hamburger.style.left = '0';
+			col1.style.left = '-18%';
+			button1.style.left = col2.style.left = '3%';
+			button1.style.width = col2.style.width = '47%';
+
+		} else {
+
+			hamburger.style.left = '20%';
+			col1.style.left = '2%';
+			button1.style.left = col2.style.left = '23%';
+			button1.style.width = col2.style.width = '27%';
+		}
+
+
+		if ( col2.style.height !== ( window.innerHeight - 95 ) + 'px' ) {
+
+			splitVertical();
+
+		} else {
+
+			splitHorizontal();
+
+		}
+
+	}
+
+	function splitHorizontal() {
+
+		inpSplit.value = col2.style.height = col3.style.height = 0.5 * ( window.innerHeight - 95 ) + 'px';
+
+		if ( hamburger.style.left === '20%' ) {
+
+			button1.style.left = col2.style.left = '23%';
+			button1.style.width = col2.style.width = '75%';
+
+			col3.style.left = '23%'; 
+			col3.style.width = '75%';
+			col3.style.top = '48%';
+
+		} else {
+
+			button1.style.left = col2.style.left = '3%';
+			button1.style.width = col2.style.width = '95%';
+
+			col3.style.left = '3%'; 
+			col3.style.width = '95%';
+			col3.style.top = '48%';
+
+		}
+
+	}
+
+	function splitVertical() {
+
+		col2.style.height = col3.style.height = ( window.innerHeight - 95 ) + 'px';
+
+		if ( hamburger.style.left === '20%' ) {
+
+			button1.style.left = col2.style.left = '23%';
+			button1.style.width = col2.style.width = '27%';
+
+			col3.style.left = '52%'; 
+			col3.style.width = '46%';
+			col3.style.top = '20px';
+
+		} else {
+
+			button1.style.left = col2.style.left = '3%';
+			button1.style.width = col2.style.width = '47%';
+
+			col3.style.left = '52%'; 
+			col3.style.width = '46%';
+			col3.style.top = '20px';
+
+		}
+
+	}
+
+	function updateSplit( ) {
+
+		if ( col2.style.height !== ( window.innerHeight - 95 ) + 'px' ) {
+
+			col2.style.width = inpSplit.value + '%';
+			col3.style.width = ( 73 - parseFloat( inpSplit.value ) ) + '%';
+			col3.style.left = ( parseFloat( inpSplit.value ) + 25 ) + '%';
+
+		} else {
+
+			col2.style.height = inpSplit.value + '%';
+			col3.style.height = ( 95 - inpSplit.value) + '%';
+
+		}
+	}
+</script>
+</body>
+</html>

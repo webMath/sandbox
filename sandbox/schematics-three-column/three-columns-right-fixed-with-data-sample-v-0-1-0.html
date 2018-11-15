@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang=en >
+<head>
+<title>Three Columns Right Fixed</title>
+<meta charset=utf-8 />
+<meta name=viewport content='width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0' />
+<style>
+
+	html, body { height: 100%; width: 100%; }
+	* { box-sizing: border-box; vertical-align:top; }
+	body { font: 12pt monospace; margin: 0; overflow: hidden; }
+	h1, h1 a, h3 { margin: 0; text-decoration: none; }
+	span { color: #ccc; position: absolute; bottom: 0;}
+
+</style>
+</head>
+<body>
+
+	<script src=http://cdnjs.cloudflare.com/ajax/libs/showdown/1.2.2/showdown.min.js ></script>
+	<script src=https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.0/ace.min.js ></script>
+
+	<span>Three Columns Right Fixed with Data Sample</span>
+	<div id=hamburger >
+		<h1><a href=JavaScript:slideHamburger(); id=bars >&#9776;</a></h1>
+	</div>
+	<div id=col1 ></div>
+	<div id=col2 ></div>
+	<iframe id=col3 ></iframe>
+
+<script>
+
+	var menuFile = '../../../../three.js/examples/';
+	var openingFile = './readme.md';
+
+	init();
+
+	function init() {
+
+		editor = ace.edit( "col2" );
+		editor.$blockScrolling = Infinity
+
+		converter = new showdown.Converter();
+
+		positionsStart();
+
+		addThreejsExamplesToCol1();
+
+		window.addEventListener( 'hashchange', hashChange, false );
+
+		hashChange();
+
+	}
+
+	function positionsStart() {
+
+		var colHeight = window.innerHeight - 50;
+
+		hamburger.style.cssText = ' padding: 15px 0 0 2px; left: 20%; position: absolute;  transition: left 1s; z-index: 10; ';
+
+		col1.style.cssText = ' background-color: #eee; border: 1px #ccc solid; height: ' + colHeight + 'px; left: 2%; padding: 0 10px; ' +
+			'overflow: auto; position: absolute; ' +
+			'top: 20px; transition: left 1s; width: 18%; ';
+		col2.style.cssText = ' background-color: #fff; border: 1px #ccc solid; height: ' + colHeight + 'px; left: 23%; position: absolute; ' +
+			'top: 20px; transition: left 1s, width 1s; width: 27%; ';
+		col3.style.cssText = ' background-color: #fff; border: 1px #ccc solid; height: ' + colHeight + 'px; left: 52%; position: absolute; ' +
+			'top: 20px; width: 46%; ';
+
+	}
+
+	function slideHamburger() {
+
+		if ( hamburger.style.left === '20%' ) {
+
+			hamburger.style.left = '0';
+			col1.style.left = '-18%';
+			col2.style.left = '3%';
+			col2.style.width = '47%';
+
+		} else {
+
+			hamburger.style.left = '20%';
+			col1.style.left = '2%';
+			col2.style.left = '23%';
+			col2.style.width = '27%';
+		}
+	}
+
+	function addThreejsExamplesToCol1() {
+
+		var xmlHttp = new XMLHttpRequest();
+		xmlHttp.open( 'GET', menuFile + 'index.html', true );
+		xmlHttp.onreadystatechange = function() {
+
+			if ( xmlHttp.readyState !== 4  ) { return; }
+
+			response = xmlHttp.responseText;
+
+			var lines = response.split(/\r\n|\n/);
+			var text = '';
+			var writing = false;
+
+			for ( var i = 0; i < lines.length; i++ ) {
+
+				if ( lines[ i ] === '		<script>' ) { writing = true; continue; }
+
+				if ( lines[ i ] === '		};' ) { text += lines[ i ]; break; }
+
+				if ( writing === true ) {
+
+					text += lines[ i ];
+
+				}
+
+			}
+
+			eval( text );
+
+			var keys = Object.keys( files );
+
+			text = '';
+
+			for ( var key in files ) {
+
+				text += '<h3>' + key + '</h3>';
+
+				for ( var i = 0; i < files[ key ].length; i++ ) {
+
+					name = files[ key ][ i ];
+					name = name.substr( name.indexOf( '_' ) + 1 );
+					name = name.replace( /_/g, ' ' );
+
+					text += '<a href=#' + menuFile + files[ key ][ i ] + '.html >' + 
+						name + '</a><br>';
+
+				}
+
+			}
+
+			col1.innerHTML += text;
+
+		};
+
+		xmlHttp.send( null );
+
+	}
+
+	function hashChange() {
+
+		fileName = location.hash ? location.hash.split( '#' )[1] : openingFile;
+
+		if ( fileName === '' ) { return; }
+
+		document.title = fileName.substr( 1 + fileName.lastIndexOf( '/' ) );
+
+		fileType = fileName.substr( fileName.lastIndexOf( '.' )).toLowerCase();
+
+		requestFile ( col2, fileName );
+
+	}
+
+	function requestFile ( obj, fileName ) {
+
+		obj.xmlHttp = new XMLHttpRequest();
+		obj.xmlHttp.open( 'GET', fileName, true );
+		obj.xmlHttp.onreadystatechange = function() {
+
+			if ( obj.xmlHttp.readyState !== 4 ) { return; }
+
+			editor.setValue( obj.xmlHttp.responseText, -1 );
+			updateView();
+
+		};
+
+		obj.xmlHttp.send( null );
+
+	}
+
+	function updateView() {
+
+		if ( fileType === '.html' ) {
+
+			response = editor.getValue();
+
+			response = response.replace( '"../build/three.min.js"', 'https://rawgit.com/mrdoob/three.js/r71/build/three.min.js' );
+			response = response.replace( /"js\//g, '"https://rawgit.com/mrdoob/three.js/r71/examples/js/' );
+			response = response.replace( /\'js\//g, '\'https://rawgit.com/mrdoob/three.js/r71/examples/js/' );
+
+			response = response.replace( /fonts\//g, menuFile + 'fonts/' );
+			response = response.replace( /models\//g, menuFile + 'models/' );
+			response = response.replace( /obj\//g, menuFile + 'obj/' );
+			response = response.replace( /scenes\//g, menuFile + 'scenes/' );
+			response = response.replace( /sounds\//g, menuFile + 'sounds/' );
+
+			response = response.replace( /textures\//g, menuFile + 'textures/' );
+
+			col3.srcdoc = response;
+
+		} else if ( fileType === '.md' ) {
+
+			col3.srcdoc = new showdown.Converter().makeHtml( editor.getValue() );
+			col3.srcdoc += '<style>body { font: 10pt monospace; }</style>';
+		}
+
+	}
+</script>
+</body>
+</html>

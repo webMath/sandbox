@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang=en >
+<head>
+<title>two-columns-plus-overlay-column-v-0-1-0.html</title>
+<meta charset=utf-8 />
+<meta name=viewport content='width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0' />
+<style>
+
+	html, body { height: 100%; }
+	* { box-sizing: border-box; vertical-align:top; }
+	body { font: 12pt monospace; margin: 0; overflow: hidden; }
+	h1, h1 a { margin: 0; text-decoration: none; }
+	span { color: #ccc; position: absolute; bottom: 0;}
+
+</style>
+</head>
+<body>
+<span>Two Columns Plus Overlay Column</span>
+<div id=hamburger >
+<h1><a href=JavaScript:slideHamburger(); id=bars >&#9776;</a></h1>
+<div id=col1 ></div>
+</div>
+<div id=col2 ></div>
+<div id=col3 ></div>
+<script>
+
+	init();
+
+	function init() {
+
+		positionsStart();
+
+	}
+
+	function positionsStart() {
+
+		var colHeight = window.innerHeight - 50;
+
+		hamburger.style.cssText = ' padding: 15px 0 0 310px; left: 3%; position: absolute; top: 0px;  transition: left 1s; z-index: 10; ';
+
+		col1.style.cssText = ' background-color: #caa; border: 1px #888 solid; height: ' + colHeight + 'px; left: 0px; position: absolute; top: 20px; transition: left 1s; width: 300px; z-index: 10; ';
+		col2.style.cssText = ' background-color: #cac; border: 1px #888 solid; height: ' + colHeight + 'px; left: 3%; position: absolute; top: 20px; width: 45%; ';
+		col3.style.cssText = ' background-color: #aac; border: 1px #888 solid; height: ' + colHeight + 'px; left: 52%; position: absolute; top: 20px; width: 45%; ';
+
+	}
+
+	function slideHamburger() {
+
+		hamburger.style.left =  hamburger.style.left === '3%' ? '-300px' : '3%';
+
+	}
+
+</script>
+</body>
+</html>

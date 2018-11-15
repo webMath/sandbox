@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang=en >
+<head>
+<title>Three Columns Right Fixed</title>
+<meta charset=utf-8 />
+<meta name=viewport content='width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0' />
+<style>
+
+	html, body { height: 100%; width: 100%; }
+	* { box-sizing: border-box; vertical-align:top; }
+	body { font: 12pt monospace; margin: 0; overflow: hidden; }
+	h1, h1 a { margin: 0; text-decoration: none; }
+	span { color: #ccc; position: absolute; bottom: 0;}
+
+</style>
+</head>
+<body>
+<span>Three Columns Right Fixed</span>
+<div id=hamburger >
+	<h1><a href=JavaScript:slideHamburger(); id=bars >&#9776;</a></h1>
+
+</div>
+<div id=col1 ></div>
+<div id=col2 ></div>
+<div id=col3 ></div>
+<script>
+
+	init();
+
+	function init() {
+
+		positionsStart();
+
+	}
+
+	function positionsStart() {
+
+		var colHeight = window.innerHeight - 50;
+
+		hamburger.style.cssText = ' padding: 15px 0 0 0; left: 20%; position: absolute;  transition: left 1s; z-index: 10; ';
+
+		col1.style.cssText = ' background-color: #caa; border: 1px #888 solid; height: ' + colHeight + 'px; left: 2%; position: absolute; ' +
+			'top: 20px; transition: left 1s; width: 18%; ';
+		col2.style.cssText = ' background-color: #cac; border: 1px #888 solid; height: ' + colHeight + 'px; left: 23%; position: absolute; ' +
+			'top: 20px; transition: left 1s, width 1s; width: 27%; ';
+		col3.style.cssText = ' background-color: #aac; border: 1px #888 solid; height: ' + colHeight + 'px; left: 52%; position: absolute; ' +
+			'top: 20px; width: 46%; ';
+
+	}
+
+	function slideHamburger() {
+
+		if ( hamburger.style.left === '20%' ) {
+
+			hamburger.style.left = '0';
+			col1.style.left = '-18%';
+			col2.style.left = '3%';
+			col2.style.width = '47%';
+
+		} else {
+
+			hamburger.style.left = '20%';
+			col1.style.left = '2%';
+			col2.style.left = '23%';
+			col2.style.width = '27%';
+		}
+	}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang=en >
+<head>
+<title>code menu edit view v0.2.2</title>
+<meta charset=utf-8 />
+<meta name=viewport content='width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0' />
+<style>
+
+	html, body { height: 100%; }
+	* { box-sizing: border-box; vertical-align:top; }
+	body { font: 12pt monospace; margin: 0; overflow: hidden; }
+	h1, h1 a { margin: 0; text-decoration: none; }
+
+/*
+	#select { height: 100%; max-width: 15%; margin: 0 5px; overflow: auto; position: absolute;}
+	#edit { border: 1px solid; float: left; height: 95%; margin-left: 15%; width: 42.5%; }
+	#view { border: 1px solid; float: left; height: 95%; width: 42.5%; }
+
+	
+	#buttons1 { clear:both; margin: 10px 0 10px 15%; padding: 10px; }
+	#buttons2 { position: absolute; right: 0; top: 96%; }
+*/
+
+	#info { line-height: 18pt; font-size: 18pt; text-decoration: none; }
+	#ifr { border: 0px solid; }
+
+</style>
+</head>
+<body>
+<script src=http://cdnjs.cloudflare.com/ajax/libs/showdown/1.2.2/showdown.min.js ></script>
+<script src=https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.0/ace.min.js ></script>
+
+	<div id=header >
+		<h1><a href=JavaScript:slideMenu(); id=bars >&#9776;</a></h1>
+		<div id=select ></div>
+	</div>
+
+	<div id=edit ></div>
+	<div id=editButtons >
+		<input type=file id=inpFile onchange=openFile(this); /> 
+		<button onclick=updateView(); >Update View</button> 
+		<button onclick=saveFile(); >Save to File</button> 
+		<a id=info href=https://github.com/exploratoria/exploratoria.github.io/sandbox/ >&#x24D8;</a>
+	</div>
+
+	<div id=view ><iframe id=ifr width=100% height=100% ></iframe></div>
+	<div id=viewButtons >
+			<input type=range id=inpSplit min=1 max=83 step=1 value=42.5 onchange=updateSplit() />
+			<button onclick=splitVertical(); >vertical</button> 
+			<button onclick=splitHorizontal(); >horizontal</button> 
+	</div>
+
+<script>
+
+	var menuFile = 'code-menu-edit-view-menu-v-0-2-2.md';
+	var openingFile = '../../../../cookbook/samples/code-snippet-threejs.html ';
+
+	var ifr = document.getElementById( 'ifr' );  // for Safari compatibility
+	var edit = document.getElementById( 'edit' );  // for Safari compatibility
+	var editor, converter;
+
+	init();
+
+	function init() {
+
+//		header = document.body.appendChild( document.createElement( 'div' ) );
+
+//		header.innerHTML = 
+
+		window.addEventListener( 'hashchange', hashChange, false );
+
+		editor = ace.edit( 'edit' );
+		editor.$blockScrolling = Infinity;
+
+		converter = new showdown.Converter();
+
+		requestFile( select, menuFile );
+
+		fileSelect();
+
+		hashChange();
+
+	}
+
+	function fileSelect() {
+
+		header.style.cssText = 'position: absolute; left: 320px; top: 10px; transition: left 1s; ';
+
+//		select.style.cssText = ' background-color: #ccc; border: 1px solid; height: ' + ( window.innerHeight - 30 ) + 'px; left: 20px; margin: 0; max-width: 280px; overflow: auto; padding: 0 10px; position: absolute; top: 20px;  ';
+
+		select.style.cssText = 'background-color: #eee; border: 1px solid; height: ' + ( window.innerHeight - 30 ) + 'px; left: -300px; max-width: 300px; ' +
+		' overflow: auto; padding: 0 15px; position: absolute; top: 10px;';
+
+		edit.style.cssText = ' border: 1px solid; height: ' + (window.innerHeight - 70 ) + 'px; left: 370px; margin: 0; position: absolute; top: 20px; width: 500px; transition: left 1s; ';
+		editButtons.style.cssText = ' border: 1px solid; height: 30px; left: 370px; margin: 0; padding: 5px; position: absolute; bottom: 10px; width: 500px; transition: left 1s;';
+
+		view.style.cssText = ' border: 1px solid; height: ' + (window.innerHeight - 70 ) + 'px; left: 920px; margin: 0; position: absolute; top: 20px; width: ' + (window.innerWidth - 950 ) + 'px; transition: left 1s; ';
+		viewButtons.style.cssText = ' border: 1px solid; height: 30px; left: 920px; margin: 0; padding: 5px; position: absolute; bottom: 10px; text-align: right; width: ' + (window.innerWidth - 950 ) + 'px; transition: left 1s; ';
+
+	}
+
+	function hashChange() {
+
+		var fileName = location.hash ? location.hash.split( '#' )[1] : openingFile;
+
+		if ( fileName === '' ) { return; }
+
+		document.title = fileName.substr( 1 + fileName.lastIndexOf( '/' ) );
+
+		fileType = fileName.substr( fileName.lastIndexOf( '.' )).toLowerCase();
+
+		requestFile ( edit, fileName );
+
+	}
+
+	function updateView() {
+
+		fileType = fileName.substr( fileName.lastIndexOf( '.' )).toLowerCase();
+
+		if ( fileType === '.md' ) {
+
+			ifr.srcdoc = converter.makeHtml( editor.getValue() );
+
+		} else {
+
+			ifr.srcdoc = editor.getValue();
+
+		}
+
+	}
+
+	function openFile( that ) {
+
+		var reader = new FileReader();
+		reader.onloadend = function( event ) {
+
+			data = reader.result;
+			editor.setValue( data, -1 );
+			updateView();
+
+		}
+
+		reader.readAsText( that.files[0] );
+
+	}
+
+	function saveFile() {
+
+		blob = new Blob( [ edit.innerHTML ] );
+		a = document.body.appendChild( document.createElement( 'a' ) );
+		a.href = window.URL.createObjectURL( blob );
+		a.download = 'code-snippet.html';
+		a.click();
+
+	}
+
+	function requestFile ( obj, fileName ) {
+
+		obj.xmlHttp = new XMLHttpRequest();
+		obj.xmlHttp.open( 'GET', fileName, true );
+		obj.xmlHttp.onreadystatechange = function() {
+
+			if ( obj.xmlHttp.readyState !== 4 ) { 
+
+				return;
+
+			} else if ( obj.id === 'select' ) {
+
+				select.innerHTML = converter.makeHtml( obj.xmlHttp.responseText );
+
+			} else {
+
+				editor.setValue( obj.xmlHttp.responseText, -1 );
+
+				updateView();
+
+			}
+
+		};
+
+		obj.xmlHttp.send( null );
+
+	}
+
+	function splitHorizontal() {
+
+		inpSplit.value = view.style.height = edit.style.height = '47.5%';
+		view.style.width = edit.style.width = '85%';
+		view.style.marginLeft ='15%'; 
+
+	}
+
+	function splitVertical() {
+
+		view.style.height = edit.style.height = '95%';
+		inpSplit.value = view.style.width = edit.style.width = '42.5%';
+		view.style.marginLeft =''; 
+
+	}
+
+	function updateSplit( ) {
+
+		if ( view.style.width ==='85%' ) {
+
+			edit.style.height = inpSplit.value + '%';
+			view.style.height = ( 95 - inpSplit.value) + '%';
+
+		} else {
+
+			edit.style.width = inpSplit.value + '%';
+			view.style.width = ( 85 - inpSplit.value) + '%';
+
+		}
+	}
+
+	function slideMenu(){
+
+		if ( header.style.left === '20px' ) {
+
+			header.style.left = '320px';
+			editButtons.style.left = edit.style.left = '370px';
+			viewButtons.style.left = view.style.left = '920px';
+
+
+		} else {
+
+			header.style.left = '20px';
+			editButtons.style.left = edit.style.left = '50px';
+			viewButtons.style.left = view.style.left = '570px';
+		}
+
+	}
+
+</script>
+</body>
+</html>
